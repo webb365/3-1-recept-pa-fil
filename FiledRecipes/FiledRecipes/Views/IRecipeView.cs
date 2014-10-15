@@ -6,7 +6,7 @@ namespace FiledRecipes.Views
 {
     public interface IRecipeView : IView
     {
-        void Show(IRecipe recipe, bool clear = true);
+        void Show(IRecipe recipe);
         void Show(IEnumerable<IRecipe> recipes);
     }
 }
