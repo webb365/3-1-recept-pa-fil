@@ -6,6 +6,8 @@
 *.user
 *.sln.docstates
 
+!FiledRecipes.csproj.user
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
