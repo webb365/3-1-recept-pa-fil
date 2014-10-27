@@ -127,5 +127,89 @@ namespace FiledRecipes.Domain
                 handler(this, e);
             }
         }
+
+        /// <summary>
+        /// Laddar in recepten
+        /// </summary>
+        public void Load()
+        {
+            List<IRecipe> recipes = new List<IRecipe>();
+            string text;
+            Recipe fullText = null;
+            RecipeReadStatus RecipeEnum = RecipeReadStatus.Indefinite; 
+
+            using (StreamReader read = new StreamReader(_path)){
+
+                while ((text = read.ReadLine()) != null){
+                    if (!string.IsNullOrWhiteSpace(text)){
+                        if (text == SectionRecipe)
+                            RecipeEnum = RecipeReadStatus.New;
+                        else if (text == SectionIngredients)
+                            RecipeEnum = RecipeReadStatus.Ingredient;
+                        else if (text == SectionInstructions)
+                            RecipeEnum = RecipeReadStatus.Instruction;
+                        
+
+
+                        else
+                        {
+                            switch (RecipeEnum){
+                                case RecipeReadStatus.New:
+                                    fullText = new Recipe(text);
+                                    recipes.Add(fullText);
+                                    break;
+                                case RecipeReadStatus.Ingredient:
+                                    string[] ingredients = text.Split(new char[] { ';' }, StringSplitOptions.None);
+                                    
+                                    if (ingredients.Length % 3 != 0)
+                                        throw new FileFormatException();
+                                    
+
+                                    Ingredient ingredient = new Ingredient();
+                                    ingredient.Amount = ingredients[0];           
+                                    ingredient.Measure = ingredients[1];          
+                                    ingredient.Name = ingredients[2];         
+
+                                    fullText.Add(ingredient);
+                                    break;
+                                case RecipeReadStatus.Instruction:
+                                    fullText.Add(text);
+                                    break;
+                                case RecipeReadStatus.Indefinite:
+                                    throw new FileFormatException();
+                          }
+                        }
+                    }
+                }
+                recipes.TrimExcess();
+                _recipes = recipes.OrderBy(recipe => recipe.Name).ToList();
+                IsModified = false;
+                OnRecipesChanged(EventArgs.Empty); 
+
+
+            }
+        }
+        /// <summary>
+        /// Sparar recepten
+        /// </summary>
+        public void Save()
+        {
+            using (StreamWriter writer = new StreamWriter(_path)) {
+                foreach (Recipe recipe in _recipes) {
+                    writer.WriteLine(SectionRecipe);
+                    writer.WriteLine(recipe.Name);  
+                    writer.WriteLine(SectionIngredients);
+                    foreach (Ingredient ingredient in recipe.Ingredients) 
+                        writer.WriteLine("{0};{1};{2}", ingredient.Amount, ingredient.Measure, ingredient.Name);
+
+                    writer.WriteLine(SectionInstructions);
+                    foreach (string details in recipe.Instructions) 
+                        writer.WriteLine(details);
+                    
+                }
+                IsModified = false;
+                OnRecipesChanged(EventArgs.Empty);
+            }
+        }
     }
 }
