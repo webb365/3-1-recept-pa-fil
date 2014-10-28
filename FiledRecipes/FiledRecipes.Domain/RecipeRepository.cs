@@ -136,24 +136,20 @@ namespace FiledRecipes.Domain
             List<IRecipe> recipes = new List<IRecipe>();
             string text;
             Recipe fullText = null;
-            RecipeReadStatus RecipeEnum = RecipeReadStatus.Indefinite; 
+            RecipeReadStatus status = RecipeReadStatus.Indefinite; 
 
             using (StreamReader read = new StreamReader(_path)){
 
                 while ((text = read.ReadLine()) != null){
                     if (!string.IsNullOrWhiteSpace(text)){
                         if (text == SectionRecipe)
-                            RecipeEnum = RecipeReadStatus.New;
+                            status = RecipeReadStatus.New;
                         else if (text == SectionIngredients)
-                            RecipeEnum = RecipeReadStatus.Ingredient;
+                            status = RecipeReadStatus.Ingredient;
                         else if (text == SectionInstructions)
-                            RecipeEnum = RecipeReadStatus.Instruction;
-                        
-
-
-                        else
-                        {
-                            switch (RecipeEnum){
+                            status = RecipeReadStatus.Instruction;
+                    else{
+                            switch (status){
                                 case RecipeReadStatus.New:
                                     fullText = new Recipe(text);
                                     recipes.Add(fullText);
@@ -163,7 +159,6 @@ namespace FiledRecipes.Domain
                                     
                                     if (ingredients.Length % 3 != 0)
                                         throw new FileFormatException();
-                                    
 
                                     Ingredient ingredient = new Ingredient();
                                     ingredient.Amount = ingredients[0];           
@@ -177,7 +172,7 @@ namespace FiledRecipes.Domain
                                     break;
                                 case RecipeReadStatus.Indefinite:
                                     throw new FileFormatException();
-                          }
+                            }
                         }
                     }
                 }
